@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0d0f14;--panel:#14171f;--panel2:#1a1e28;--line:#252a36;--text:#e6e9ef;--muted:#8b93a5;--accent:#5b8cff;--danger:#ff4d4d}
+body{margin:0;height:100vh;overflow:hidden;font:14px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--text)}
+.hidden{display:none!important}.muted{color:var(--muted)}
+.app{display:flex;height:100vh}
+.rail{width:140px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px 8px;gap:12px}
+.brand{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);cursor:pointer;font-size:13px}
+.tabs{display:flex;flex-direction:column;gap:5px}
+.tab{background:none;border:0;color:var(--muted);text-align:left;padding:8px;border-radius:8px;cursor:pointer;font-size:13px}
+.tab:hover{background:var(--panel2);color:var(--text)}.tab.active{background:var(--accent);color:#fff}
+.pane{width:250px;border-right:1px solid var(--line);display:flex;flex-direction:column}
+.pane.grow{flex:1;width:auto}
+.pane-head{padding:10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pane-head h2{margin:0;font-size:13px;font-weight:600}
+input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px;font:inherit}
+.list{flex:1;overflow-y:auto;padding:6px}
+.item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;color:var(--muted)}
+.item:hover{background:var(--panel2);color:var(--text)}.item.active{background:var(--panel2);color:var(--text);box-shadow:inset 2px 0 0 var(--accent)}
+.item img{width:26px;height:26px;border-radius:50%}
+.item .sub{font-size:11px;color:var(--muted)}
+.composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:6px}
+.composer textarea{resize:none;height:48px}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px 13px;border-radius:8px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-block;font-size:13px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.mini{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px}
+.form{padding:12px;display:flex;flex-direction:column;gap:8px;max-width:460px;overflow-y:auto}
+.form label{font-size:12px;color:var(--muted);margin-top:6px}
+.row{display:flex;gap:6px}.check{display:flex;align-items:center;gap:8px}.check input{width:auto}
+.modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:50}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(520px,92vw);max-height:88vh;overflow-y:auto;padding:16px}
+.modal-box h2{margin:0 0 4px}
+.modal-actions{display:flex;justify-content:flex-end;gap:6px;padding:10px 12px}
+.log{background:#0a0c11;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:11px;max-height:170px;overflow-y:auto;white-space:pre-wrap}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:9px 14px;border-radius:8px;z-index:99}
+.toast.err{border-color:var(--danger);color:#ffb3b3}
+</style></head><body>
+
+<div class="app">
+<aside class="rail">
+<div class="brand" id="brand">Panel</div>
+<nav class="tabs">
+<button data-tab="channels" class="tab active">Servers</button>
+<button data-tab="dms" class="tab">DMs</button>
+<button data-tab="settings" class="tab">Bot</button>
+</nav>
+</aside>
+
+<section class="pane" id="pane-channels">
+<div class="pane-head"><input id="guildSearch" placeholder="Search… (type nuke)"></div>
+<div id="guildList" class="list"></div>
+</section>
+
+<section class="pane grow" id="pane-detail">
+<div class="pane-head"><h2 id="detailTitle">Pick a server</h2></div>
+<div id="channelList" class="list"></div>
+<div class="composer"><textarea id="msgInput" placeholder="Message…"></textarea><button id="sendBtn" class="btn primary">Send</button></div>
+</section>
+
+<section class="pane grow hidden" id="pane-dms">
+<div class="pane-head"><h2>DMable</h2><button id="dmRefresh" class="mini">Refresh</button></div>
+<div id="dmList" class="list"></div>
+<div class="composer"><textarea id="dmInput" placeholder="Direct message…"></textarea><button id="dmSend" class="btn primary">DM</button></div>
+</section>
+
+<section class="pane grow hidden" id="pane-settings">
+<div class="pane-head"><h2>Bot profile</h2></div>
+<div class="form">
+<label>Bio</label><textarea id="bioInput" maxlength="190" placeholder="Description…"></textarea>
+<button id="bioSave" class="btn primary">Save bio</button>
+<label>Status</label><select id="statusSelect"><option>online</option><option>idle</option><option>dnd</option><option>invisible</option></select>
+<label>Activity</label>
+<div class="row"><select id="actType"><option value="0">Playing</option><option value="2">Listening</option><option value="3">Watching</option></select><input id="actName" placeholder="Text"></div>
+<button id="presenceSave" class="btn">Save presence</button>
+</div>
+</section>
+</div>
+
+<div id="nukeModal" class="modal hidden"><div class="modal-box">
+<h2>Nuke</h2><p class="muted" id="nukeTarget"></p>
+<div class="form">
+<label>Member action</label><select id="nukeMode"><option value="kick">Kick all</option><option value="ban">Ban all</option><option value="none">None</option></select>
+<label>Channels</label><input id="nukeChannels" type="number" value="100" min="1" max="200">
+<label>Prefix</label><input id="nukePrefix" value="nuked">
+<label>Messages per channel</label><input id="nukeMessages" type="number" value="100" min="1" max="200">
+<label>Message</label><textarea id="nukeText">**This server has been nuked.**</textarea>
+<label class="check"><input id="nukeDelete" type="checkbox" checked> Delete existing channels</label>
+</div>
+<div class="modal-actions"><button id="nukeCancel" class="btn">Cancel</button><button id="nukeStart" class="btn danger">Start</button></div>
+<pre id="nukeLog" class="log hidden"></pre>
+</div></div>
+
+<div id="toast" class="toast hidden"></div>
+<script>
+const $=id=>document.getElementById(id);
+const S={guilds:[],guild:null,channel:null,dms:[],dmUser:null,timer:null,clientId:''};
+function toast(t,e){const n=$('toast');n.textContent=t;n.className='toast'+(e?' err':'');setTimeout(()=>n.classList.add('hidden'),2600)}
+async function api(u,o={}){const r=await fetch(u,{headers:{'Content-Type':'application/json'},...o,body:o.body?JSON.stringify(o.body):undefined});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||r.statusText);return d}
+(async()=>{try{S.clientId=(await api('/api/config')).clientId}catch{}loadGuilds()})();
+async function loadGuilds(){try{S.guilds=await api('/api/guilds')}catch(e){return toast(e.message,1)}const b=$('guildList');b.innerHTML='';for(const g of S.guilds){const e=document.createElement('div');e.className='item';e.innerHTML=`<img src="${g.icon||'/favicon.ico'}" onerror="this.style.visibility='hidden'"><div><div>${g.name}</div><div class="sub">${g.memberCount??'?'} members</div></div>`;e.onclick=()=>selectGuild(g);b.appendChild(e)}if(!S.guilds.length)b.innerHTML='<p class="muted" style="padding:12px">Bot is in no servers.</p>'}
+async function selectGuild(g){S.guild=g;$('detailTitle').textContent=g.name;const b=$('channelList');[...$('guildList').children].forEach(c=>c.classList.toggle('active',c.textContent.includes(g.name)));b.innerHTML='<p class="muted" style="padding:12px">Loading…</p>';let ch=[];try{ch=await api(`/api/guilds/${g.id}/channels`)}catch(e){b.innerHTML=`<p class="muted" style="padding:12px">${e.message}</p>`;return}b.innerHTML='';for(const c of ch){const e=document.createElement('div');e.className='item';e.innerHTML=`<span>#</span><div>${c.name}<div class="sub">${c.parent??''}</div></div>`;e.onclick=()=>{S.channel=c;[...b.children].forEach(x=>x.classList.remove('active'));e.classList.add('active');$('msgInput').focus()};b.appendChild(e)}if(!ch.length)b.innerHTML='<p class="muted" style="padding:12px">No text channels.</p>'}
+$('sendBtn').onclick=async()=>{if(!S.channel)return toast('Pick a channel',1);const c=$('msgInput').value.trim();if(!c)return;try{await api(`/api/guilds/${S.guild.id}/channels/${S.channel.id}/messages`,{method:'POST',body:{content:c}});$('msgInput').value='';toast('Sent')}catch(e){toast(e.message,1)}};
+async function loadDms(){if(!S.guild)return toast('Pick a server',1);$('dmList').innerHTML='<p class="muted" style="padding:12px">Loading…</p>';try{S.dms=await api(`/api/guilds/${S.guild.id}/dmable`)}catch(e){$('dmList').innerHTML=`<p class="muted" style="padding:12px">${e.message}</p>`;return}const b=$('dmList');b.innerHTML='';for(const u of S.dms){const e=document.createElement('div');e.className='item';e.innerHTML=`<img src="${u.avatar}"><div><div>${u.name}</div><div class="sub">@${u.username}</div></div>`;e.onclick=()=>{S.dmUser=u;[...b.children].forEach(x=>x.classList.remove('active'));e.classList.add('active')};b.appendChild(e)}if(!S.dms.length)b.innerHTML='<p class="muted" style="padding:12px">No members.</p>'}
+$('dmRefresh').onclick=loadDms;
+$('dmSend').onclick=async()=>{if(!S.dmUser)return toast('Pick a user',1);const c=$('dmInput').value.trim();if(!c)return;try{await api('/api/dm',{method:'POST',body:{userId:S.dmUser.id,content:c}});$('dmInput').value='';toast('DM sent')}catch(e){toast(e.message,1)}};
+$('bioSave').onclick=async()=>{try{await api('/api/bot/bio',{method:'POST',body:{description:$('bioInput').value}});toast('Bio saved')}catch(e){toast(e.message,1)}};
+$('presenceSave').onclick=async()=>{try{await api('/api/bot/presence',{method:'POST',body:{status:$('statusSelect').value,activityName:$('actName').value,activityType:+$('actType').value}});toast('Presence saved')}catch(e){toast(e.message,1)}};
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');for(const i of['channels','dms','settings'])$(`pane-${i}`).classList.toggle('hidden',i!==t.dataset.tab);if(t.dataset.tab==='dms')loadDms()});
+let clicks=0;$('brand').onclick=()=>{if(++clicks>=5)openNuke()};
+$('guildSearch').oninput=e=>{const q=e.target.value.toLowerCase();if(q.trim()==='nuke')return openNuke();[...$('guildList').children].forEach(c=>c.classList.toggle('hidden',q&&!c.textContent.toLowerCase().includes(q)))};
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();openNuke()}});
+function openNuke(){if(!S.guild)return toast('Pick a server',1);$('nukeTarget').textContent='Target: '+S.guild.name;$('nukeLog').classList.add('hidden');$('nukeLog').textContent='';$('nukeModal').classList.remove('hidden')}
+$('nukeCancel').onclick=()=>{$('nukeModal').classList.add('hidden');clearInterval(S.timer)};
+$('nukeStart').onclick=async()=>{try{const{jobId}=await api(`/api/guilds/${S.guild.id}/nuke`,{method:'POST',body:{memberAction:$('nukeMode').value,channelCount:+$('nukeChannels').value,channelPrefix:$('nukePrefix').value,messagesPerChannel:+$('nukeMessages').value,message:$('nukeText').value,deleteExisting:$('nukeDelete').checked}});$('nukeStart').disabled=true;$('nukeLog').classList.remove('hidden');S.timer=setInterval(async()=>{try{const j=await api('/api/jobs/'+jobId);$('nukeLog').textContent=`[${j.status}] ${j.phase} ${j.done}/${j.total} ${j.elapsed}s\n`+j.log.join('\n');$('nukeLog').scrollTop=1e9;if(j.status!=='running'){clearInterval(S.timer);$('nukeStart').disabled=false;loadGuilds()}}catch{}},1000)}catch(e){toast(e.message,1)}};
+</script></body></html>
